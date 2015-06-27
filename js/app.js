@@ -1,8 +1,11 @@
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
-function Timer() {
+function Timer(time) {
   EventEmitter.call(this);
+  if (arguments.length === 0) {
+    time = 10;
+  }
   var self = this;
   this.i = 0;
   this.ms = Date.now();
@@ -11,7 +14,11 @@ function Timer() {
     self.emit('start');
     nIntervID = setInterval(function() {
       self.emit('tick', { interval : self.i++ });
-    }, 1000);
+      if (self.i === time) {
+        self.stop();
+      }
+    }, 100);
+
   };
   self.stop = function() {
     self.emit('stop');
@@ -25,15 +32,14 @@ var myTimer = new Timer();
 function tickHandler(event) {
   process.stdout.write('tick ' + this.i + '\n');
 }
-function startHandler(event) {
+function startHandler() {
   process.stdout.write('start ' + this.ms + '\n');
 }
 
-function stopHandler(event) {
+function stopHandler() {
   var elapsedTime = Date.now() - this.ms;
   process.stdout.write('elapsed time ' + elapsedTime + '\n');
 }
-setTimeout(myTimer.stop, 5000);
 
 myTimer.on('tick', tickHandler);
 myTimer.on('start', startHandler);
