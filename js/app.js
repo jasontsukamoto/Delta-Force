@@ -3,6 +3,7 @@ var util = require('util');
 
 function Timer(time, lag) {
   EventEmitter.call(this);
+  var speed = 1000;
   if (arguments.length === 0) {
     time = 10;
   }
@@ -16,7 +17,9 @@ function Timer(time, lag) {
   self.start = function() {
     self.emit('start');
     var start = Date.now();
-    nIntervID = setInterval(function() {
+    self.flag = false;
+
+    nIntervID = setInterval(function deltaForce () {
       self.emit('tick', { interval : self.i++ });
       var lagger = 0;
       lagger = Date.now();
@@ -27,10 +30,23 @@ function Timer(time, lag) {
         self.stop();
       }
 
+
       if (self.lagEvent >= lag) {
+        self.flag = true;
         self.emit('lag');
       }
-    }, 1000);
+
+      if (self.flag === true) {
+        clearInterval(nIntervID);
+
+        if (self.i !== time) {
+          setTimeout(deltaForce, speed = 1000 - self.lagEvent);
+        }
+
+      }
+    }, speed);
+
+
 
   };
   self.stop = function() {
@@ -41,7 +57,7 @@ function Timer(time, lag) {
 
 util.inherits(Timer, EventEmitter);
 
-var myTimer = new Timer(20,50);
+var myTimer = new Timer(20, 10);
 function tickHandler(event) {
   process.stdout.write('tick ' + this.i + '\n');
 }
